@@ -1,0 +1,161 @@
+<html>
+<head>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.5/p5.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.5/addons/p5.dom.js"></script>
+	<script src="http://cdn.peerjs.com/0.3/peer.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+
+	<script src="./lib/p5.speech.js"></script>
+	<script src="./lib/SimpleSearch.js"></script>
+	<script src="./lib/imgLiquid-min.js"></script>
+	<script>
+
+	var myRec = new p5.SpeechRec(); // new P5.SpeechRec object
+	var connection = null;
+	let hostname = 'localhost';
+	let translateEndpoint = 'https://translation.googleapis.com/language/translate/v2';
+	let SPEECH_API_KEY = 'AIzaSyCVFmyFJ38cNXrXf5XQ1pBS8CtVtHzkIeg';
+
+	function setup()
+	{
+		createCanvas(0,0);
+		myRec.continuous = true; // do continuous recognition
+		myRec.interimResults = false; // allow partial recognition (faster, less accurate)
+
+		myRec.onResult = showResult;
+		myRec.start();
+		myRec.onEnd = function() {
+			myRec.start();
+		}
+
+		// var peer = new Peer('listener', {host: hostname, port: 9000, path: '/'});
+		// var conn = peer.connect('wordcloud');
+		// conn.on('open', function(){
+		// 	connection = conn;
+		// });
+	}
+
+	function draw()
+	{
+		//myRec.onEnd = myRec.start();
+	}
+
+	function showResult()
+	{
+		if(myRec.resultValue==true) {
+			let result = myRec.resultString;
+			console.log(result);
+			$("#text").text(result);
+			if(connection) {
+				connection.send(result);
+			}
+
+			let inputData = {
+				'q': result,
+			    'source': 'en',
+			    'target': 'th',
+			    'format': 'text',
+				'key': SPEECH_API_KEY
+			};
+
+			$.get(translateEndpoint, inputData, function(result) {
+				let resultTranslation = result.data.translations[0].translatedText;
+				let newInput = {
+					'q': resultTranslation,
+				    'source': 'th',
+				    'target': 'en',
+				    'format': 'text',
+					'key': SPEECH_API_KEY
+				};
+				$('#text1').text(resultTranslation);
+				$.get(translateEndpoint, newInput, function (result) {
+					let resultTranslation = result.data.translations[0].translatedText;
+					$('#text2').text(resultTranslation);
+				})
+	        });
+
+			// SimpleSearch.execute(myRec.resultString, function(responseURL) {
+				// $("#content").attr("src", responseURL);
+				// $(".imgLiquidNoFill").imgLiquid({ fill: false});
+			// })
+		}
+	}
+
+</script>
+<style>
+	body {
+		background-color: rgb(0,0,0);
+		padding:0;
+		margin:0;
+		font-family: Helvetica, Arial, sans-serif;
+		font-weight: bold;
+		font-size: 90pt;
+		color: rgb(255,255,255);
+	}
+
+    .imgContainer {
+    	width: 100%;
+    	height: 100%;
+    }
+
+    #text { }
+
+</style>
+</head>
+<body>
+	<div class="imgContainer imgLiquidNoFill imgLiquid">
+		<img id="content" src="" />
+	</div>
+    <div style="position:absolute; top:3%; left:6% ; right: 6%; display:table-cell; vertical-align:top; width:88%; background-color: rgb(0,0,0)">
+        <div id ="text">
+        	English
+        </div>
+    </div>
+
+	<div style="position:absolute; top:33%; left:6% ; right: 6%; display:table-cell; vertical-align:top; width:88%; background-color: rgb(0,0,0); color: rgb(0,0,0);">
+  		<div>
+  		.<br>
+  		.<br>
+  		.<br>
+  		.<br>
+  		.<br>
+  		.<br>
+  		.
+  		</div>
+    </div>
+
+	<div style="position:absolute; top:37%; left:6% ; right: 6%; display:table-cell; vertical-align:top; width:88%; background-color: rgb(0,0,0); line-height: 110%">
+        <div id ="text1">
+        	ภาษาไทย
+        </div>
+    </div>
+
+    <div style="position:absolute; top:64%; left:6% ; right: 6%; display:table-cell; vertical-align:top; width:88%; background-color: rgb(0,0,0); color: rgb(0,0,0);">
+  		<div>
+  		.<br>
+  		.<br>
+  		.<br>
+  		.<br>
+  		.<br>
+  		.<br>
+  		.
+  		</div>
+    </div>
+
+    <div style="position:absolute; top:68%; left:6% ; right: 6%; display:table-cell; vertical-align:top; width:88%; background-color: rgb(0,0,0)">
+        <div id ="text2">
+        	English
+        </div>
+    </div>
+
+	<div style="position:absolute; top:97%; left:6% ; right: 6%; display:table-cell; vertical-align:top; width:88%; background-color: rgb(0,0,0); color: rgb(0,0,0);">
+  		<div>
+  		.<br>
+  		.
+  		</div>
+    </div>
+
+
+    </div>
+</body>
+</html>

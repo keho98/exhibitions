@@ -1,0 +1,45 @@
+<html>
+<head>
+	<script src="http://cdn.peerjs.com/0.3/peer.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+	<script src="./lib/jqcloud2/dist/jqcloud.min.js"></script>
+
+	<link rel="stylesheet" href="./lib/jqcloud2/dist/jqcloud.min.css">
+	<script>
+        var words = [{ text: "Hello", weight: 4 }];
+        $(function() {
+            $('#keywords').jQCloud(words);
+        });
+
+        function handleWord(word) {
+            // Find if the element already exists
+            let index = words.findIndex(function(w) {
+				return w['text'] == word
+            });
+
+            if(index == -1) {
+				words.push({ text: word, weight: 4 });
+            } else {
+            	words[index]['weight'] += 1
+            }
+
+            $('#keywords').jQCloud('update', words);
+        }
+
+		var peer = new Peer('wordcloud', {host: 'localhost', port: 9000, path: '/'});
+		peer.on('connection', function(conn) {
+            conn.on('data', handleWord);
+		});
+
+	</script>
+<style> 
+	#keywords {
+		width: 100%;
+		height: 100%;
+	}
+</style>
+</head>
+<body>
+	<div id="keywords"></div>
+</body>
+</html>
