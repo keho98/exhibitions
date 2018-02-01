@@ -1,0 +1,102 @@
+<html>
+<head>
+    <link id="sheets" rel="stylesheet" type="text/css" href="./styles/main.css" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
+	<script src="./lib/p5.min.js"></script>
+    <script src="./lib/FontLoader.js" charset="utf-8"></script>
+	<script>
+		maps = [];
+        u = 40;
+        delay = 10;
+        FONT_SIZE = 24;
+        FILE_URL = './data/final_1.json';
+
+        currentLetter = 'A';
+        function Font(f, p) {
+            this.letter = 'A'
+            this.x = f.predictions[this.letter][0];
+            this.y = f.predictions[this.letter][1];
+            this.nx = this.x;
+            this.ny = this.y;
+            this.family = f.family;
+            this.font = fontsCache[this.family];
+            this.p = p;
+
+            this.move = () => {
+                this.x += (this.nx-this.x)/delay;
+                this.y += (this.ny-this.y)/delay;
+            };
+
+            this.setLetter = (letter) => {
+                this.nx = f.predictions[letter][0];
+                this.ny = f.predictions[letter][1];
+                this.letter = letter;
+            }
+
+            this.display = () => {
+                this.p.textFont(this.font, FONT_SIZE);
+                this.p.text(this.letter, this.x, this.y);
+            };
+        }
+		var s = function( p ) {
+			var x = 100;
+			var y = 100;
+			var i = 0;
+
+			WIDTH = 1000;
+			HEIGHT = 1000;
+            fontsCache = {};
+
+            p.preload = () => {
+                result.forEach((f) => {
+                    fontsCache[f.family] = p.loadFont(`fonts/${f.family}.ttf`);
+                });
+                fonts = result.map((f) => new Font(f, p));
+            }
+
+			p.setup = () => {
+				p.createCanvas(WIDTH, HEIGHT);
+                p.background('black');
+                p.fill('white');
+			}
+
+            p.keyTyped = () => {
+                currentLetter = p.key.toUpperCase();
+                fonts.forEach((f) => f.setLetter(currentLetter));
+            }
+
+			p.draw = () => {
+                p.clear();
+                p.background('black');
+
+                p.translate(WIDTH/2, HEIGHT/2);
+                fonts.forEach((f) => {
+                    f.display();
+                    f.move();
+                })
+			}
+		};
+        $(function() {
+            fontLinkTemplate = Handlebars.compile($('#font-link-template').html());
+            fontLoader = new FontLoader();
+			$.ajax({
+				dataType: 'json',
+				url: FILE_URL,
+				success: (r) => {
+					result = r.filter((f) => f.predictions && f.family !== 'Cuprum' && f.family !== 'Heebo');
+                    result.forEach((r) => fontLoader.loadFont(r))
+					myp5 = new p5(s);
+				}
+			});
+        });
+	</script>
+</head>
+<body>
+
+    <script id="font-link-template" type="text/x-handlebars-template">
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family={{family}}" />
+    </script>
+</body>
+</html>
